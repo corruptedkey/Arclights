@@ -1,0 +1,171 @@
+name: Nightly Build
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Build even if there are no new commits"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - name: Checkout dev (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Check for new commits & generate notes
+        id: check
+        env:
+          FORCE: ${{ inputs.force }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          SHA=$(git rev-parse HEAD)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+          LAST=""
+          if git rev-parse -q --verify "refs/tags/nightly" >/dev/null; then
+            LAST=$(git rev-parse "refs/tags/nightly^{commit}")
+          fi
+
+          if [ "$LAST" = "$SHA" ] && [ "$FORCE" != "true" ]; then
+            echo "No new commits since $LAST, skipping."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+          FMT="- [\`%h\`](https://github.com/$REPO/commit/%H) %s — %an"
+
+          if [ -n "$LAST" ] && git merge-base --is-ancestor "$LAST" "$SHA"; then
+            COUNT=$(git rev-list --count "$LAST..$SHA")
+            HEADER="### Commits in this build ($COUNT) since [\`${LAST::7}\`](https://github.com/$REPO/commit/$LAST)"
+            COMMITS=$(git log "$LAST..$SHA" --pretty=format:"$FMT")
+          else
+            COUNT=$(git rev-list --count "$SHA")
+            HEADER="### Latest commits (previous nightly not found in history)"
+            COMMITS=$(git log -n 30 "$SHA" --pretty=format:"$FMT")
+          fi
+
+          {
+            echo "Automated nightly build from branch \`dev\` at [\`${SHA::7}\`](https://github.com/$REPO/commit/$SHA)."
+            echo
+            echo "$HEADER"
+            echo
+            echo "$COMMITS" | head -n 200
+            if [ "$COUNT" -gt 200 ]; then
+              echo
+              echo "_…and more. Full history: [compare](https://github.com/$REPO/compare/${LAST:-$SHA}...$SHA)_"
+            fi
+          } > notes.md
+
+          cat notes.md
+
+      - name: Upload release notes
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-notes
+          path: notes.md
+          retention-days: 1
+
+  nightly:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Wails v3 CLI
+        shell: pwsh
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0
+
+      - name: Build Application Binary
+        shell: pwsh
+        run: |
+          wails3 build
+
+      - name: Sign & Generate Nightly Manifest
+        shell: pwsh
+        env:
+          NIGHTLY_KEY: ${{ secrets.UPDATER_NIGHTLY_KEY }}
+        run: |
+          $dateStr = (Get-Date).ToUniversalTime().ToString("yyyyMMdd.HHmm")
+          $ver = "1.6.0-nightly.$dateStr"
+
+          $keyFile = [System.IO.Path]::GetTempFileName()
+          [System.IO.File]::WriteAllText($keyFile, $env:NIGHTLY_KEY)
+
+          wails3 updater manifest `
+            -version $ver `
+            -channel nightly `
+            -key $keyFile `
+            -url-prefix "https://github.com/corruptedkey/Arclights/releases/download/nightly/" `
+            -output bin/manifest.json `
+            bin/arclights.exe
+
+          Remove-Item -Force $keyFile
+
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-notes
+
+      - name: Publish Rolling Nightly Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          target_commitish: ${{ needs.prepare.outputs.sha }}
+          name: "Arclights Nightly"
+          body_path: notes.md
+          prerelease: true
+          make_latest: false
+          files: |
+            bin/arclights.exe
+            bin/manifest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move rolling `nightly` tag to built commit
+        shell: pwsh
+        env:
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: |
+          git tag -f nightly $env:SHA
+          git push origin refs/tags/nightly --force

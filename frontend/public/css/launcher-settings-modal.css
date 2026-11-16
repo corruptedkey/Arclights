@@ -1,0 +1,413 @@
+.launcher-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  animation: launcherFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes launcherFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.launcher-modal-backdrop .toast-popup {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 22, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  font-size: 12.5px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  white-space: nowrap;
+  z-index: 120;
+  pointer-events: none;
+  animation: toastFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.launcher-modal-window {
+  width: 740px;
+  height: 420px;
+  background: rgba(22, 21, 24, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: launcherWindowScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes launcherWindowScale {
+  from {
+    opacity: 0;
+    transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 12px)) scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+}
+
+.launcher-modal-window .modal-header {
+  height: 48px;
+  padding: 0 16px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: move;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.launcher-modal-window .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.launcher-modal-window .title-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.launcher-modal-window .close-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.65);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.launcher-modal-window .close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.launcher-modal-window .modal-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.launcher-modal-window .tabs-sidebar {
+  width: 165px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.launcher-modal-window .tab-btn {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.launcher-modal-window .tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.launcher-modal-window .tab-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.launcher-modal-window .content-panel {
+  flex: 1;
+  padding: 12px 16px 16px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.launcher-modal-window .content-panel::-webkit-scrollbar {
+  width: 5px;
+}
+
+.launcher-modal-window .content-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+}
+
+.launcher-modal-window .setting-card {
+  background: rgba(255, 255, 255, 0.038);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.launcher-modal-window .card-heading {
+  margin: 0 0 2px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.launcher-modal-window .card-heading.no-margin {
+  margin: 0;
+}
+
+.launcher-modal-window .card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.launcher-modal-window .version-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.launcher-modal-window .select-box {
+  height: 34px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+  font-size: 12.5px;
+  cursor: default;
+}
+
+.launcher-modal-window .checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.launcher-modal-window .custom-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: background 0.15s ease;
+}
+
+.launcher-modal-window .custom-checkbox.checked {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.launcher-modal-window .checkbox-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.launcher-modal-window .checkbox-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.launcher-modal-window .checkbox-subtext {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.3;
+}
+
+.launcher-modal-window .radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.launcher-modal-window .radio-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.launcher-modal-window .custom-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease;
+}
+
+.launcher-modal-window .custom-radio.checked {
+  border-color: #ffffff;
+}
+
+.launcher-modal-window .radio-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.launcher-modal-window .radio-label {
+  font-size: 12.5px;
+  color: #ffffff;
+}
+
+.launcher-modal-window .speed-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.launcher-modal-window .speed-input {
+  width: 64px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 0 6px;
+  color: #ffffff;
+  font-size: 12px;
+  text-align: center;
+  outline: none;
+}
+
+.launcher-modal-window .speed-input:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.launcher-modal-window .speed-unit {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.launcher-modal-window .action-row {
+  width: 100%;
+  height: 34px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  margin-bottom: 2px;
+}
+
+.launcher-modal-window .action-row:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.launcher-modal-window .action-row:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.launcher-modal-window .action-row svg {
+  color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+}
+
+.launcher-modal-window .update-ready-row {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+}
+
+.launcher-modal-window .update-ready-row:hover {
+  background: rgba(255, 215, 0, 0.25);
+}
+
+.launcher-modal-window .downloading-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 10px;
+}
+
+.launcher-modal-window .dl-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.launcher-modal-window .dl-bar-bg {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.launcher-modal-window .dl-bar-fill {
+  height: 100%;
+  background: #ffd700;
+  transition: width 0.2s ease;
+}

@@ -1,0 +1,408 @@
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: settingsFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes settingsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.settings-card {
+  position: relative;
+  width: 760px;
+  max-width: 95vw;
+  background: #18171A;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+  display: flex;
+  min-height: 430px;
+  overflow: hidden;
+  animation: settingsScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+@keyframes settingsScaleIn {
+  from {
+    opacity: 0;
+    transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 12px)) scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+}
+
+.settings-card .close-btn {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  z-index: 10;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.settings-card .close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.settings-card .sidebar-col {
+  width: 180px;
+  flex-shrink: 0;
+  padding: 24px 14px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-card .settings-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  margin-bottom: 22px;
+}
+
+.settings-card .gear-icon {
+  flex-shrink: 0;
+}
+
+.settings-card .settings-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.settings-card .tab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-card .tab-btn {
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.settings-card .tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.settings-card .tab-btn.active {
+  background: #2e2d32;
+  color: #ffffff;
+}
+
+.settings-card .content-panel {
+  flex: 1;
+  min-width: 0;
+  padding: 48px 28px 26px;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-card .game-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.settings-card .game-avatar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-card .game-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.settings-card .game-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-card .game-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.settings-card .game-ver {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.settings-card .uninstall-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.settings-card .uninstall-btn:hover:not(.disabled) {
+  color: #ff5555;
+  background: rgba(255, 85, 85, 0.08);
+}
+
+.settings-card .uninstall-btn.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.settings-card .settings-box {
+  background: #242327;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.settings-card .box-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.settings-card .path-text {
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.settings-card .box-hint {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.settings-card .box-hint-mb {
+  margin-top: 4px;
+  margin-bottom: 14px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.settings-card .box-hint-mt {
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.settings-card .action-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 14px 0 10px;
+}
+
+.settings-card .action-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.settings-card .action-link:hover {
+  color: #fdfc00;
+}
+
+.settings-card .chevron {
+  color: rgba(255, 255, 255, 0.4);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.settings-card .action-link:hover .chevron {
+  color: #fdfc00;
+  transform: translateX(2px);
+}
+
+.settings-card .radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-card .radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease;
+}
+
+.settings-card .radio-option:hover {
+  color: #ffffff;
+}
+
+.settings-card .radio-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.settings-card .radio-option.selected .radio-indicator {
+  color: #ffffff;
+}
+
+.settings-card .radio-option.selected .radio-label {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.settings-card .cmd-input-wrap {
+  margin-top: 12px;
+  height: 40px;
+  background: #1c1b1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.2s ease;
+}
+
+.settings-card .cmd-input-wrap:focus-within {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.settings-card .cmd-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.settings-card .char-count {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: 8px;
+}
+
+.settings-card .option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.settings-card .option-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.settings-card .toggle-switch {
+  width: 58px;
+  height: 26px;
+  background: #1c1b1f;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.settings-card .toggle-switch:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.settings-card .toggle-switch.active {
+  background: #1c1b1f;
+  border: 1.5px solid #fdfc00;
+}
+
+.settings-card .toggle-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.settings-card .toggle-circle.active {
+  background: #fdfc00;
+}
+
+.settings-card .circle-dash {
+  width: 6px;
+  height: 2px;
+  background: #18171a;
+  border-radius: 1px;
+}
+
+.settings-card .toggle-text {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.02em;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+.settings-card .toggle-text.on {
+  color: #ffffff;
+}

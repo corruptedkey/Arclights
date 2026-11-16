@@ -1,0 +1,56 @@
+:root {
+  --ink: #06070f;
+  --text: #f4f6fb;
+  --muted: #9aa6c0;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --radius-window: 16px;
+
+  font-family: "Microsoft YaHei", "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+html,
+body {
+  background: transparent;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+  --wails-draggable: no-drag;
+}
+
+.header-drag-region {
+  --wails-draggable: drag;
+}
+
+body.has-modal-open .header-drag-region,
+.header-drag-region.no-drag,
+button,
+a,
+input,
+[data-no-drag] {
+  --wails-draggable: no-drag;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"] {
+  -webkit-user-select: text;
+  user-select: text;
+}

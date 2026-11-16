@@ -1,0 +1,215 @@
+.install-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modalFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.install-modal-card {
+  position: relative;
+  width: 630px;
+  max-width: 94vw;
+  background: #18171A;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  padding: 28px 36px 30px;
+  display: flex;
+  flex-direction: column;
+  animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 12px)) scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+}
+
+.install-modal-card .modal-title {
+  margin: 0;
+  text-align: center;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-transform: uppercase;
+  cursor: grab;
+}
+
+.install-modal-card .field-label {
+  margin-top: 24px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.install-modal-card .path-input-wrap {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  background: #242327;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0 12px 0 16px;
+  transition: border-color 0.2s ease;
+}
+
+.install-modal-card .path-input-wrap:focus-within {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.install-modal-card .path-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: inherit;
+}
+
+.install-modal-card .divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 10px;
+}
+
+.install-modal-card .browse-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.install-modal-card .browse-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.install-modal-card .folder-svg {
+  display: block;
+}
+
+.install-modal-card .space-info {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.52);
+  line-height: 1.4;
+}
+
+.install-modal-card .shortcut-row {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  background: #242327;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0 14px;
+  cursor: pointer;
+  user-select: none;
+  gap: 12px;
+  transition: background 0.15s ease;
+}
+
+.install-modal-card .shortcut-row:hover {
+  background: #29282d;
+}
+
+.install-modal-card .native-checkbox-sr {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+
+.install-modal-card .checkbox-asset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.install-modal-card .shortcut-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.install-modal-card .modal-actions {
+  margin-top: 28px;
+  display: flex;
+  gap: 14px;
+}
+
+.install-modal-card .btn-cancel,
+.install-modal-card .btn-confirm {
+  flex: 1;
+  height: 44px;
+  border-radius: 9999px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.install-modal-card .btn-cancel {
+  background: #28272b;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.install-modal-card .btn-cancel:hover {
+  background: #333237;
+}
+
+.install-modal-card .btn-confirm {
+  background: #ffffff;
+  color: #111111;
+  font-weight: 700;
+}
+
+.install-modal-card .btn-confirm:hover {
+  background: #ececec;
+}
+
+.install-modal-card .btn-cancel:active,
+.install-modal-card .btn-confirm:active {
+  transform: scale(0.98);
+}

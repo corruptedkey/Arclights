@@ -1,0 +1,80 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.6.0)'
+        required: true
+        default: '1.6.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wails v3 CLI
+        shell: pwsh
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Build Application Binary
+        shell: pwsh
+        run: |
+          wails3 build
+
+      - name: Sign & Generate Update Manifest
+        shell: pwsh
+        env:
+          RELEASES_KEY: ${{ secrets.UPDATER_RELEASES_KEY }}
+        run: |
+          $ver = "${{ github.ref_name }}".TrimStart('v')
+          if (-not $ver -or $ver -eq "") {
+            $ver = "${{ github.event.inputs.version }}"
+          }
+          if (-not $ver) { $ver = "1.6.0" }
+
+          # Write secret private key to temporary file for signing
+          $keyFile = [System.IO.Path]::GetTempFileName()
+          [System.IO.File]::WriteAllText($keyFile, $env:RELEASES_KEY)
+
+          wails3 updater manifest `
+            -version $ver `
+            -channel stable `
+            -key $keyFile `
+            -url-prefix "https://github.com/corruptedkey/Arclights/releases/download/v$ver/" `
+            -output bin/manifest.json `
+            bin/arclights.exe
+
+          Remove-Item -Force $keyFile
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            bin/arclights.exe
+            bin/manifest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

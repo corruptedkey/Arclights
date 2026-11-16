@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Arclights
+Comment=Arknights: Endfield alternative launcher
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/arclights %u
+Terminal=false
+Type=Application
+Icon=arclights
+Categories=Utility;
+StartupWMClass=arclights
+
+ 

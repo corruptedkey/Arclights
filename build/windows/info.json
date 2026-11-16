@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.0.1"
+	},
+	"info": {
+		"0409": {
+			"ProductVersion": "0.0.1",
+			"CompanyName": "Arclights",
+			"FileDescription": "Arknights: Endfield alternative launcher",
+			"LegalCopyright": "(c) 2026, corruptedkey",
+			"ProductName": "Arclights",
+			"Comments": "Arknights: Endfield alternative launcher"
+		}
+	}
+}

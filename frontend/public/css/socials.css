@@ -1,0 +1,197 @@
+.socials {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 20px;
+  background: rgba(24, 20, 20, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.socials .btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.socials .btn:hover,
+.socials .btn:focus-visible,
+.socials .item:hover .btn.has-popup,
+.socials .item:focus-within .btn.has-popup {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.socials .brand {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.socials .icon-gryph {
+  width: 31px;
+  height: 31px;
+  fill: currentColor;
+}
+
+.socials .icon-gryph.skland-gl {
+  width: 34px;
+  height: 33px;
+}
+
+.socials .item {
+  position: relative;
+}
+
+.socials .popup {
+  position: absolute;
+  right: 100%;
+  top: -12px;
+  padding-right: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(6px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s;
+}
+
+.socials .popup.has-qr {
+  top: -52px;
+}
+
+.socials .item:hover .popup,
+.socials .item:focus-within .popup {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.socials .panel {
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(24, 20, 20, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  color: #f1f1f3;
+  font-size: 14px;
+}
+
+.socials .w-list {
+  width: 200px;
+}
+
+.socials .w-qr {
+  width: 232px;
+}
+
+.socials .w-grid {
+  width: 330px;
+  padding: 14px 10px;
+}
+
+.socials .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.socials .row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.socials .chev {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.socials .qr {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #fff;
+  color: #8a8a90;
+  font-size: 12px;
+}
+
+.socials .qr img {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  object-fit: contain;
+}
+
+.socials .qr-caption {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.socials .grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 6px;
+}
+
+.socials .tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.socials .tool:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.socials .tool img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}

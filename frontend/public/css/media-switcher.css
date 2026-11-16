@@ -1,0 +1,109 @@
+.switch-bar-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-20px);
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+  z-index: 9;
+}
+
+.switch-bar-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.switch-bar {
+  background: linear-gradient(180deg, rgba(24, 23, 26, 0.78), rgba(24, 23, 26, 0));
+  height: 90px;
+  width: 100%;
+}
+
+.hover-area {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 60px;
+  cursor: pointer;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.switch-tabs {
+  position: relative;
+  top: 10px;
+  display: flex;
+  gap: 4px;
+  width: 108px;
+  height: 32px;
+  padding: 3px;
+  border-radius: 100px;
+  background: rgba(189, 189, 189, 0.3);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(-16px);
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+  pointer-events: auto;
+}
+
+.switch-tabs.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.switch-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 49px;
+  height: 26px;
+  border-radius: 100px;
+  background: rgba(24, 23, 26, 0.95);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.55);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.switch-indicator.is-static {
+  transform: translateX(53px);
+}
+
+.switch-tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+  pointer-events: auto;
+  outline: none;
+}
+
+.switch-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
