@@ -8,5 +8,8 @@ build/ios/xcode/overlay.json
 build/ios/xcode/gen/
 build/android/overlay.json
 build/android/gen/
-keys
+# Updater private keys (keep public keys tracked for go:embed in main.go)
+keys/*.key
+keys/README.md
+!keys/*.key.pub
 cmd
