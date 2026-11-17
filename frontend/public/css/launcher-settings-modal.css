@@ -261,13 +261,7 @@
   justify-content: space-between;
   color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.launcher-modal-window .select-box:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  cursor: default;
 }
 
 .launcher-modal-window .checkbox-row {

@@ -53,14 +53,6 @@ jobs:
             fi
           fi
 
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            TAG_SHA=$(git rev-parse "refs/tags/$TAG^{commit}")
-            if [ "$TAG_SHA" != "$SHA" ]; then
-              echo "::error::Tag $TAG already exists at ${TAG_SHA::7}, but this run would build ${SHA::7}. Use a new version, delete the tag first, or run the workflow from the tag itself."
-              exit 1
-            fi
-          fi
-
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 

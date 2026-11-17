@@ -945,6 +945,61 @@ func (s *LauncherService) ClearDownloadCache(installPath string) error {
 	return nil
 }
 
+// UninstallGame cancels active operations and completely deletes all game files from the install directory.
+func (s *LauncherService) UninstallGame(installPath string) error {
+	s.isClearingCache.Store(true)
+	defer s.isClearingCache.Store(false)
+
+	s.CancelOperation()
+
+	if installPath == "" {
+		settings := s.loadSettings()
+		installPath = settings.InstallPath
+	}
+	if installPath == "" {
+		return nil
+	}
+
+	cleanPath := filepath.Clean(installPath)
+	vol := filepath.VolumeName(cleanPath)
+	if cleanPath == vol || cleanPath == vol+"\\" || cleanPath == vol+"/" || cleanPath == "/" {
+		return errors.New("cannot uninstall from root directory")
+	}
+
+	_ = os.Remove(filepath.Join(cleanPath, ".arclights.progress.json"))
+	_ = os.Remove(filepath.Join(cleanPath, ".arclights.state.json"))
+	_ = os.Remove(filepath.Join(cleanPath, "config.ini"))
+
+	entries, err := os.ReadDir(cleanPath)
+	if err == nil {
+		for _, entry := range entries {
+			itemPath := filepath.Join(cleanPath, entry.Name())
+			_ = os.RemoveAll(itemPath)
+		}
+	}
+
+	desktopDir, err := os.UserHomeDir()
+	if err == nil {
+		_ = os.Remove(filepath.Join(desktopDir, "Desktop", "Arknights Endfield.lnk"))
+	}
+
+	app := application.Get()
+	if app != nil {
+		app.Event.Emit("installer:status:change", "not_installed")
+		app.Event.Emit("installer:stream:progress", installer.StreamProgress{
+			DownloadedBytes:    0,
+			TotalDownloadBytes: 0,
+			CompletedFiles:     0,
+			CurrentFile:        "",
+			SpeedBps:           0,
+			Percent:            0,
+			IsPaused:           false,
+		})
+	}
+
+	return nil
+}
+
 // StartVerification runs game verification and repairs any corrupted files in the background.
 func (s *LauncherService) StartVerification(installPath string) error {
 	go func() {

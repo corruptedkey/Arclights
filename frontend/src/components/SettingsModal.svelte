@@ -30,17 +30,32 @@
 
   let showUninstallConfirm = $state(false);
   let isUninstalling = $state(false);
+  let cancelBtnRef = $state<HTMLButtonElement | null>(null);
+  let previouslyFocusedElement: HTMLElement | null = null;
 
   const CLOSE_DURATION = 250;
 
   $effect(() => {
+    if (gameState?.install_path) {
+      currentPath = gameState.install_path.replace(/\\/g, '/');
+    }
+  });
+
+  $effect(() => {
+    if (showUninstallConfirm) {
+      previouslyFocusedElement = document.activeElement as HTMLElement;
+      queueMicrotask(() => {
+        cancelBtnRef?.focus();
+      });
+    } else if (previouslyFocusedElement) {
+      previouslyFocusedElement.focus();
+      previouslyFocusedElement = null;
+    }
+  });
+
+  $effect(() => {
     if (open) {
       closing = false;
-      showUninstallConfirm = false;
-      isUninstalling = false;
-      if (gameState?.install_path) {
-        currentPath = gameState.install_path.replace(/\\/g, '/');
-      }
       if (typeof localStorage !== 'undefined') {
         const savedRender = localStorage.getItem('arclights_rendering_mode');
         if (savedRender === 'dx' || savedRender === 'vk') {
@@ -188,7 +203,7 @@
     if (isUninstalling) return;
     isUninstalling = true;
     try {
-      await LauncherService.ClearDownloadCache(currentPath);
+      await LauncherService.UninstallGame(currentPath);
       showUninstallConfirm = false;
       handleClose();
     } catch (e) {
@@ -238,7 +253,7 @@
     >
 
 
-      <aside class="sidebar-col">
+      <aside class="sidebar-col" inert={showUninstallConfirm}>
         <div class="settings-header">
           <svg class="gear-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M4.36128 3.22889L3.61641 2.48401L2.2022 3.89823L2.99448 4.69051C2.50552 5.42858 2.17543 6.28107 2.05297 7.19922L0.5 7.19922V9.19922H2.11986C2.30316 10.1028 2.68953 10.9327 3.22926 11.6392L2.48445 12.384L3.89866 13.7982L4.69104 13.0059C5.42898 13.4946 6.28128 13.8246 7.19922 13.947V15.5H9.19921L9.19922 13.8801C9.96581 13.7246 10.6794 13.423 11.3095 13.0055L12.1017 13.7977L13.5159 12.3835L12.7711 11.6387C13.3106 10.9323 13.6969 10.1026 13.8801 9.19922H15.5V7.19922H13.947C13.8246 6.28129 13.4946 5.42899 13.0059 4.69104L13.7982 3.89875L12.3839 2.48453L11.6392 3.22927C10.9327 2.68953 10.1028 2.30316 9.19922 2.11986L9.19922 0.5H7.19922V2.05297C6.14117 2.19408 5.17032 2.61093 4.36128 3.22889ZM8 12.4C10.4301 12.4 12.4 10.4301 12.4 8C12.4 5.56995 10.4301 3.6 8 3.6C5.56995 3.6 3.6 5.56995 3.6 8C3.6 10.4301 5.56995 12.4 8 12.4ZM8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" fill="white"/>
@@ -266,7 +281,7 @@
         </nav>
       </aside>
 
-      <div class="right-col">
+      <div class="right-col" inert={showUninstallConfirm}>
           <div class="top-bar">
         <button
             type="button"
@@ -443,12 +458,13 @@
           >
             <div id="notification-heading" class="notification-title">SYSTEM NOTIFICATION</div>
             <div class="notification-body">
-              We're sorry to see you go! Are you sure you want to uninstall the game?
+              Are you sure you want to uninstall Arknights: Endfield? All game files will be removed.
             </div>
             <div class="notification-actions">
               <button
                 type="button"
                 class="notification-btn-cancel"
+                bind:this={cancelBtnRef}
                 onclick={handleCancelUninstall}
                 disabled={isUninstalling}
               >

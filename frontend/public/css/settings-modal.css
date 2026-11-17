@@ -568,6 +568,12 @@
   transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
 }
 
+.settings-card .notification-btn-cancel:focus-visible,
+.settings-card .notification-btn-confirm:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
 .settings-card .notification-btn-cancel {
   background: #2b2c31;
   color: #ffffff;
@@ -597,4 +603,11 @@
 .settings-card .notification-btn-confirm:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-card .notification-overlay,
+  .settings-card .notification-card {
+    animation: none;
+  }
 }

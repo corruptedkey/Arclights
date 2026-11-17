@@ -212,6 +212,13 @@ export function StreamUpdateGame(installDir: string, currentVersion: string): $C
 }
 
 /**
+ * UninstallGame cancels active operations and completely deletes all game files from the install directory.
+ */
+export function UninstallGame(installPath: string): $CancellablePromise<void> {
+    return $Call.ByID(97687495, installPath);
+}
+
+/**
  * VerifyGame scans installDir against the live game_files CDN manifest and returns missing/corrupt files.
  */
 export function VerifyGame(installDir: string): $CancellablePromise<installer$0.GameFileEntry[] | null> {

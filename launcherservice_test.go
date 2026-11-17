@@ -76,6 +76,33 @@ func TestClearDownloadCacheCompleteGame(t *testing.T) {
 	}
 }
 
+func TestUninstallGame(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	_ = os.WriteFile(filepath.Join(tmpDir, "config.ini"), []byte("[Game]\nversion=1.6.4\nentry=Endfield.exe\n"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "Endfield.exe"), []byte("MZ..."), 0755)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".arclights.progress.json"), []byte(`{"status":"ready"}`), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, ".arclights.state.json"), []byte(`{}`), 0644)
+	subDir := filepath.Join(tmpDir, "Endfield_Data")
+	_ = os.MkdirAll(subDir, 0755)
+	_ = os.WriteFile(filepath.Join(subDir, "main.data"), []byte("game data"), 0644)
+
+	s := &LauncherService{}
+
+	err := s.UninstallGame(tmpDir)
+	if err != nil {
+		t.Fatalf("UninstallGame failed: %v", err)
+	}
+
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		t.Fatalf("failed to read tmpDir: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected tmpDir to be completely empty after uninstall, got %d items", len(entries))
+	}
+}
+
 func TestDetectEncryptedConfigAndInstalledStatus(t *testing.T) {
 	s := &LauncherService{}
 	cfg, err := s.DetectInstalledConfig(`E:\Arknights Endfield`)

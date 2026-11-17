@@ -74,6 +74,16 @@
     if (open) {
       closing = false;
       loadBackendSettings();
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       modalX = 0;
       modalY = 0;

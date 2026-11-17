@@ -42,6 +42,16 @@
         spaceInfo = diskSpace;
       }
       refreshSpace(currentPath);
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleCancel();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       posX = 0;
       posY = 0;
@@ -93,10 +103,12 @@
 
   function handleConfirm() {
     if (closing) return;
+    const confirmedPath = currentPath;
+    const confirmedShortcut = currentShortcut;
     closing = true;
     setTimeout(() => {
       closing = false;
-      onConfirm(currentPath, currentShortcut);
+      onConfirm(confirmedPath, confirmedShortcut);
     }, CLOSE_DURATION);
   }
 
@@ -147,6 +159,7 @@
           bind:value={currentPath}
           onblur={handlePathBlur}
           spellcheck="false"
+          disabled={closing}
         />
         <div class="divider"></div>
         <button
@@ -155,6 +168,7 @@
           title="Browse Directory"
           aria-label="Browse Directory"
           onclick={chooseDirectory}
+          disabled={closing}
         >
           <svg class="folder-svg" width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 10H12" stroke="currentColor" stroke-width="2"/>
@@ -178,6 +192,7 @@
           type="checkbox"
           class="native-checkbox-sr"
           bind:checked={currentShortcut}
+          disabled={closing}
         />
         <span class="checkbox-asset" aria-hidden="true">
           {#if currentShortcut}
@@ -195,10 +210,10 @@
       </label>
 
       <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick={handleCancel}>
+        <button type="button" class="btn-cancel" onclick={handleCancel} disabled={closing}>
           Cancel
         </button>
-        <button type="button" class="btn-confirm" onclick={handleConfirm}>
+        <button type="button" class="btn-confirm" onclick={handleConfirm} disabled={closing}>
           Confirm
         </button>
       </div>
