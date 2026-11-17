@@ -40,6 +40,9 @@
   let updateToast = $state<string | null>(null);
   let toastTimer: any = null;
 
+  let closing = $state(false);
+  let visible = $state(false);
+
   let modalX = $state(0);
   let modalY = $state(0);
   let isDragging = false;
@@ -65,15 +68,29 @@
     }, duration);
   }
 
+  const CLOSE_DURATION = 250;
+
   $effect(() => {
     modalState.launcherSettingsOpen = open;
     if (open) {
+      closing = false;
+      visible = true;
       loadBackendSettings();
     } else {
       modalX = 0;
       modalY = 0;
     }
   });
+
+  function handleClose() {
+    if (closing) return;
+    closing = true;
+    setTimeout(() => {
+      closing = false;
+      visible = false;
+      onClose();
+    }, CLOSE_DURATION);
+  }
 
   async function loadBackendSettings() {
     try {
@@ -254,8 +271,8 @@
   }
 </script>
 
-{#if open}
-  <div class="modal-backdrop launcher-modal-backdrop" data-no-drag>
+{#if open || visible}
+  <div class="modal-backdrop launcher-modal-backdrop" class:closing data-no-drag>
     {#if updateToast}
       <div class="toast-popup" role="status">
         {updateToast}
@@ -265,6 +282,7 @@
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       class="modal-window launcher-modal-window"
+      class:closing
       style="--drag-x: {modalX}px; --drag-y: {modalY}px; transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));"
       role="dialog"
       aria-modal="true"
@@ -302,7 +320,7 @@
 
       <div class="right-col">
         <div class="top-bar">
-          <button type="button" class="close-btn" aria-label="Close" onclick={onClose}>
+          <button type="button" class="close-btn" aria-label="Close" onclick={handleClose}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <rect x="12" y="11.2928" width="1" height="1" transform="rotate(45 12 11.2928)" stroke="currentColor"/>
               <path fill-rule="evenodd" clip-rule="evenodd" d="M13.5562 9.31353L17.0917 5.778L18.5059 7.19221L14.9704 10.7277L13.5562 9.31353ZM5.77746 17.0912L9.31299 13.5556L10.7272 14.9698L7.19167 18.5054L5.77746 17.0912ZM14.687 13.5556L18.2225 17.0912L16.8083 18.5054L13.2728 14.9698L14.687 13.5556ZM6.90883 5.77745L10.4444 9.31298L9.03015 10.7272L5.49462 7.19166L6.90883 5.77745Z" fill="currentColor"/>

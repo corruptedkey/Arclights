@@ -11,9 +11,18 @@
   animation: settingsFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.settings-backdrop.closing {
+  animation: settingsFadeOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
 @keyframes settingsFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes settingsFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .settings-card {
@@ -31,6 +40,10 @@
   user-select: none;
 }
 
+.settings-card.closing {
+  animation: settingsScaleOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
 @keyframes settingsScaleIn {
   from {
     opacity: 0;
@@ -39,6 +52,17 @@
   to {
     opacity: 1;
     transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+}
+
+@keyframes settingsScaleOut {
+  from {
+    opacity: 1;
+    transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 12px)) scale(0.93);
   }
 }
 

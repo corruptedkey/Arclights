@@ -20,14 +20,21 @@
   let launchCommand = $state('');
   let troubleshootingMode = $state(false);
 
+  let closing = $state(false);
+  let visible = $state(false);
+
   let posX = $state(0);
   let posY = $state(0);
   let isDragging = false;
   let startX = 0;
   let startY = 0;
 
+  const CLOSE_DURATION = 250;
+
   $effect(() => {
     if (open) {
+      closing = false;
+      visible = true;
       if (gameState?.install_path) {
         currentPath = gameState.install_path.replace(/\\/g, '/');
       }
@@ -67,6 +74,16 @@
       posY = 0;
     }
   });
+
+  function handleClose() {
+    if (closing) return;
+    closing = true;
+    setTimeout(() => {
+      closing = false;
+      visible = false;
+      onClose();
+    }, CLOSE_DURATION);
+  }
 
   async function setRenderingMode(mode: 'vk' | 'dx') {
     renderingMode = mode;
@@ -142,7 +159,7 @@
     if (!confirmUninstall) return;
     try {
       await LauncherService.ClearDownloadCache(currentPath);
-      onClose();
+      handleClose();
     } catch (e) {
       console.error('Failed to uninstall game:', e);
     }
@@ -172,11 +189,12 @@
   }
 </script>
 
-{#if open}
-  <div class="settings-backdrop" role="presentation">
+{#if open || visible}
+  <div class="settings-backdrop" class:closing role="presentation">
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       class="settings-card"
+      class:closing
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-heading"
@@ -220,7 +238,7 @@
             type="button"
             class="close-btn"
             aria-label="Close"
-            onclick={onClose}
+            onclick={handleClose}
         >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <rect x="12" y="11.2928" width="1" height="1" transform="rotate(45 12 11.2928)" stroke="currentColor"/>

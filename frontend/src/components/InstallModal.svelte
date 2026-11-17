@@ -23,14 +23,21 @@
   let spaceInfo = $state<DiskSpaceInfo | null>(null);
   let isLoadingSpace = $state(false);
 
+  let closing = $state(false);
+  let visible = $state(false);
+
   let posX = $state(0);
   let posY = $state(0);
   let isDragging = false;
   let startX = 0;
   let startY = 0;
 
+  const CLOSE_DURATION = 250;
+
   $effect(() => {
     if (open) {
+      closing = false;
+      visible = true;
       currentPath = (installPath || 'E:/Arknights Endfield').replace(/\\/g, '/');
       currentShortcut = createShortcut ?? true;
       if (diskSpace) {
@@ -39,6 +46,16 @@
       refreshSpace(currentPath);
     }
   });
+
+  function handleCancel() {
+    if (closing) return;
+    closing = true;
+    setTimeout(() => {
+      closing = false;
+      visible = false;
+      onCancel();
+    }, CLOSE_DURATION);
+  }
 
   async function refreshSpace(path: string) {
     if (!path) return;
@@ -102,11 +119,12 @@
   }
 </script>
 
-{#if open}
-  <div class="modal-backdrop install-modal-backdrop" role="presentation">
+{#if open || visible}
+  <div class="modal-backdrop install-modal-backdrop" class:closing role="presentation">
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       class="modal-card install-modal-card"
+      class:closing
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -172,7 +190,7 @@
       </label>
 
       <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick={onCancel}>
+        <button type="button" class="btn-cancel" onclick={handleCancel}>
           Cancel
         </button>
         <button type="button" class="btn-confirm" onclick={handleConfirm}>
