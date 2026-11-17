@@ -872,16 +872,22 @@ func (s *LauncherService) CreateDesktopShortcut(installPath string) error {
 
 	psScript := fmt.Sprintf(`
 $WshShell = New-Object -comObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut(%q)
-$Shortcut.TargetPath = %q
+$Shortcut = $WshShell.CreateShortcut(%s)
+$Shortcut.TargetPath = %s
 $Shortcut.Arguments = "--start"
-$Shortcut.WorkingDirectory = %q
-$Shortcut.IconLocation = %q
+$Shortcut.WorkingDirectory = %s
+$Shortcut.IconLocation = %s
 $Shortcut.Save()
-`, shortcutPath, launcherExe, filepath.Dir(launcherExe), gameExePath+",0")
+`, powerShellSingleQuoted(shortcutPath), powerShellSingleQuoted(launcherExe), powerShellSingleQuoted(filepath.Dir(launcherExe)), powerShellSingleQuoted(gameExePath+",0"))
 
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", psScript)
 	return cmd.Run()
+}
+
+// powerShellSingleQuoted returns a PowerShell string literal without allowing
+// variable or backtick expansion in a filesystem path.
+func powerShellSingleQuoted(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
 }
 
 // desktopShortcutPath uses the Windows known Desktop folder so shortcut
@@ -1074,6 +1080,15 @@ func (s *LauncherService) StartVerification(installPath string) error {
 
 		diffs, err := s.verifyGame(op.ctx, installPath)
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				if s.isClearingCache.Load() {
+					return
+				}
+				if app != nil {
+					app.Event.Emit("installer:status:change", "paused")
+				}
+				return
+			}
 			if app != nil {
 				app.Event.Emit("installer:error", err.Error())
 				app.Event.Emit("installer:status:change", "ready")

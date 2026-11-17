@@ -2,8 +2,6 @@ package main
 
 import (
 	"arclights/networks"
-	"context"
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -148,12 +146,14 @@ func TestCancelOperationAndWaitWaitsForOperationCompletion(t *testing.T) {
 	}()
 
 	select {
+	case <-op.ctx.Done():
+	case <-time.After(time.Second):
+		t.Fatal("operation context was not cancelled")
+	}
+	select {
 	case <-finished:
 		t.Fatal("cancellation returned before the operation finished")
-	case <-time.After(20 * time.Millisecond):
-	}
-	if err := op.ctx.Err(); !errors.Is(err, context.Canceled) {
-		t.Fatalf("operation context was not cancelled: %v", err)
+	default:
 	}
 
 	s.finishOperation(op)
@@ -161,6 +161,13 @@ func TestCancelOperationAndWaitWaitsForOperationCompletion(t *testing.T) {
 	case <-finished:
 	case <-time.After(time.Second):
 		t.Fatal("cancellation did not return after the operation finished")
+	}
+}
+
+func TestPowerShellSingleQuoted(t *testing.T) {
+	path := "C:\\Users\\O'Brien\\$Desktop`Redirected"
+	if got, want := powerShellSingleQuoted(path), "'C:\\Users\\O''Brien\\$Desktop`Redirected'"; got != want {
+		t.Fatalf("PowerShell path quoting = %q, want %q", got, want)
 	}
 }
 
