@@ -52,6 +52,15 @@
   animation: modalScaleOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .install-modal-backdrop,
+  .install-modal-backdrop.closing,
+  .install-modal-card,
+  .install-modal-card.closing {
+    animation: none;
+  }
+}
+
 @keyframes modalScaleIn {
   from {
     opacity: 0;

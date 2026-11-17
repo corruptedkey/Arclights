@@ -25,7 +25,7 @@ import * as application$0 from "../github.com/wailsapp/wails/v3/pkg/application/
 import * as $models from "./models.js";
 
 /**
- * CancelOperation pauses or stops any active verify, repair, or stream install operation.
+ * CancelOperation signals an active verify, repair, or stream operation to stop.
  */
 export function CancelOperation(): $CancellablePromise<void> {
     return $Call.ByID(2873020484);

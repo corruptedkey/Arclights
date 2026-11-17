@@ -2,10 +2,13 @@ package main
 
 import (
 	"arclights/networks"
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestClearDownloadCacheIncompleteGame(t *testing.T) {
@@ -79,13 +82,25 @@ func TestClearDownloadCacheCompleteGame(t *testing.T) {
 func TestUninstallGame(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	_ = os.WriteFile(filepath.Join(tmpDir, "config.ini"), []byte("[Game]\nversion=1.6.4\nentry=Endfield.exe\n"), 0644)
-	_ = os.WriteFile(filepath.Join(tmpDir, "Endfield.exe"), []byte("MZ..."), 0755)
-	_ = os.WriteFile(filepath.Join(tmpDir, ".arclights.progress.json"), []byte(`{"status":"ready"}`), 0644)
-	_ = os.WriteFile(filepath.Join(tmpDir, ".arclights.state.json"), []byte(`{}`), 0644)
+	if err := os.WriteFile(filepath.Join(tmpDir, "config.ini"), []byte("[Game]\nversion=1.6.4\nentry=Endfield.exe\n"), 0644); err != nil {
+		t.Fatalf("create config fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, "Endfield.exe"), []byte("MZ..."), 0755); err != nil {
+		t.Fatalf("create executable fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, ".arclights.progress.json"), []byte(`{"status":"ready"}`), 0644); err != nil {
+		t.Fatalf("create progress fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, ".arclights.state.json"), []byte(`{}`), 0644); err != nil {
+		t.Fatalf("create state fixture: %v", err)
+	}
 	subDir := filepath.Join(tmpDir, "Endfield_Data")
-	_ = os.MkdirAll(subDir, 0755)
-	_ = os.WriteFile(filepath.Join(subDir, "main.data"), []byte("game data"), 0644)
+	if err := os.MkdirAll(subDir, 0755); err != nil {
+		t.Fatalf("create game data directory fixture: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(subDir, "main.data"), []byte("game data"), 0644); err != nil {
+		t.Fatalf("create game data fixture: %v", err)
+	}
 
 	s := &LauncherService{}
 
@@ -100,6 +115,52 @@ func TestUninstallGame(t *testing.T) {
 	}
 	if len(entries) != 0 {
 		t.Fatalf("expected tmpDir to be completely empty after uninstall, got %d items", len(entries))
+	}
+}
+
+func TestUninstallGameRejectsUnrecognizedDirectory(t *testing.T) {
+	tmpDir := t.TempDir()
+	unrelatedFile := filepath.Join(tmpDir, "do-not-delete.txt")
+	if err := os.WriteFile(unrelatedFile, []byte("keep"), 0644); err != nil {
+		t.Fatalf("create unrelated fixture: %v", err)
+	}
+
+	err := (&LauncherService{}).UninstallGame(tmpDir)
+	if err == nil {
+		t.Fatal("expected uninstall of an unrecognized directory to fail")
+	}
+	if _, err := os.Stat(unrelatedFile); err != nil {
+		t.Fatalf("unrecognized-directory file was removed: %v", err)
+	}
+}
+
+func TestCancelOperationAndWaitWaitsForOperationCompletion(t *testing.T) {
+	s := &LauncherService{}
+	op, err := s.beginOperation()
+	if err != nil {
+		t.Fatalf("begin operation: %v", err)
+	}
+
+	finished := make(chan struct{})
+	go func() {
+		s.cancelOperationAndWait()
+		close(finished)
+	}()
+
+	select {
+	case <-finished:
+		t.Fatal("cancellation returned before the operation finished")
+	case <-time.After(20 * time.Millisecond):
+	}
+	if err := op.ctx.Err(); !errors.Is(err, context.Canceled) {
+		t.Fatalf("operation context was not cancelled: %v", err)
+	}
+
+	s.finishOperation(op)
+	select {
+	case <-finished:
+	case <-time.After(time.Second):
+		t.Fatal("cancellation did not return after the operation finished")
 	}
 }
 

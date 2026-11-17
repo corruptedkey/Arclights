@@ -31,6 +31,7 @@
   let showUninstallConfirm = $state(false);
   let isUninstalling = $state(false);
   let cancelBtnRef = $state<HTMLButtonElement | null>(null);
+  let confirmBtnRef = $state<HTMLButtonElement | null>(null);
   let previouslyFocusedElement: HTMLElement | null = null;
 
   const CLOSE_DURATION = 250;
@@ -197,6 +198,18 @@
   function handleCancelUninstall() {
     if (isUninstalling) return;
     showUninstallConfirm = false;
+  }
+
+  function handleUninstallDialogKeydown(e: KeyboardEvent) {
+    if (e.key !== 'Tab' || isUninstalling || !cancelBtnRef || !confirmBtnRef) return;
+
+    if (e.shiftKey && document.activeElement === cancelBtnRef) {
+      e.preventDefault();
+      confirmBtnRef.focus();
+    } else if (!e.shiftKey && document.activeElement === confirmBtnRef) {
+      e.preventDefault();
+      cancelBtnRef.focus();
+    }
   }
 
   async function handleConfirmUninstall() {
@@ -455,6 +468,7 @@
             aria-labelledby="notification-heading"
             tabindex="-1"
             onclick={(e) => e.stopPropagation()}
+            onkeydown={handleUninstallDialogKeydown}
           >
             <div id="notification-heading" class="notification-title">SYSTEM NOTIFICATION</div>
             <div class="notification-body">
@@ -473,6 +487,7 @@
               <button
                 type="button"
                 class="notification-btn-confirm"
+                bind:this={confirmBtnRef}
                 onclick={handleConfirmUninstall}
                 disabled={isUninstalling}
               >

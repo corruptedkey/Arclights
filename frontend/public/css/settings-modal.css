@@ -606,6 +606,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.settings-backdrop,
+	.settings-backdrop.closing,
+	.settings-card,
+	.settings-card.closing,
   .settings-card .notification-overlay,
   .settings-card .notification-card {
     animation: none;

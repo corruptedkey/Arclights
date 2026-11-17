@@ -74,6 +74,15 @@
   animation: launcherWindowScaleOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .launcher-modal-backdrop,
+  .launcher-modal-backdrop.closing,
+  .launcher-modal-window,
+  .launcher-modal-window.closing {
+    animation: none;
+  }
+}
+
 @keyframes launcherWindowScale {
   from {
     opacity: 0;
