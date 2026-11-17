@@ -24,7 +24,6 @@
   let isLoadingSpace = $state(false);
 
   let closing = $state(false);
-  let visible = $state(false);
 
   let posX = $state(0);
   let posY = $state(0);
@@ -37,13 +36,15 @@
   $effect(() => {
     if (open) {
       closing = false;
-      visible = true;
       currentPath = (installPath || 'E:/Arknights Endfield').replace(/\\/g, '/');
       currentShortcut = createShortcut ?? true;
       if (diskSpace) {
         spaceInfo = diskSpace;
       }
       refreshSpace(currentPath);
+    } else {
+      posX = 0;
+      posY = 0;
     }
   });
 
@@ -52,7 +53,6 @@
     closing = true;
     setTimeout(() => {
       closing = false;
-      visible = false;
       onCancel();
     }, CLOSE_DURATION);
   }
@@ -92,7 +92,12 @@
   }
 
   function handleConfirm() {
-    onConfirm(currentPath, currentShortcut);
+    if (closing) return;
+    closing = true;
+    setTimeout(() => {
+      closing = false;
+      onConfirm(currentPath, currentShortcut);
+    }, CLOSE_DURATION);
   }
 
   function onMouseDown(e: MouseEvent) {
@@ -119,7 +124,7 @@
   }
 </script>
 
-{#if open || visible}
+{#if open}
   <div class="modal-backdrop install-modal-backdrop" class:closing role="presentation">
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div

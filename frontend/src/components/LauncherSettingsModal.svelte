@@ -41,7 +41,6 @@
   let toastTimer: any = null;
 
   let closing = $state(false);
-  let visible = $state(false);
 
   let modalX = $state(0);
   let modalY = $state(0);
@@ -74,7 +73,6 @@
     modalState.launcherSettingsOpen = open;
     if (open) {
       closing = false;
-      visible = true;
       loadBackendSettings();
     } else {
       modalX = 0;
@@ -87,7 +85,6 @@
     closing = true;
     setTimeout(() => {
       closing = false;
-      visible = false;
       onClose();
     }, CLOSE_DURATION);
   }
@@ -271,7 +268,7 @@
   }
 </script>
 
-{#if open || visible}
+{#if open}
   <div class="modal-backdrop launcher-modal-backdrop" class:closing data-no-drag>
     {#if updateToast}
       <div class="toast-popup" role="status">

@@ -21,7 +21,6 @@
   let troubleshootingMode = $state(false);
 
   let closing = $state(false);
-  let visible = $state(false);
 
   let posX = $state(0);
   let posY = $state(0);
@@ -29,12 +28,16 @@
   let startX = 0;
   let startY = 0;
 
+  let showUninstallConfirm = $state(false);
+  let isUninstalling = $state(false);
+
   const CLOSE_DURATION = 250;
 
   $effect(() => {
     if (open) {
       closing = false;
-      visible = true;
+      showUninstallConfirm = false;
+      isUninstalling = false;
       if (gameState?.install_path) {
         currentPath = gameState.install_path.replace(/\\/g, '/');
       }
@@ -69,18 +72,36 @@
       }).catch((err) => {
         console.warn('Failed to get launcher settings in SettingsModal:', err);
       });
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (showUninstallConfirm) {
+            e.stopPropagation();
+            handleCancelUninstall();
+          } else {
+            handleClose();
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       posX = 0;
       posY = 0;
+      showUninstallConfirm = false;
+      isUninstalling = false;
     }
   });
 
   function handleClose() {
     if (closing) return;
     closing = true;
+    showUninstallConfirm = false;
     setTimeout(() => {
       closing = false;
-      visible = false;
       onClose();
     }, CLOSE_DURATION);
   }
@@ -153,19 +174,32 @@
     }
   }
 
-  async function handleUninstall() {
+  function handleUninstall() {
     if (!gameState?.version) return;
-    const confirmUninstall = window.confirm('Are you sure you want to uninstall Arknights: Endfield? All game files will be removed.');
-    if (!confirmUninstall) return;
+    showUninstallConfirm = true;
+  }
+
+  function handleCancelUninstall() {
+    if (isUninstalling) return;
+    showUninstallConfirm = false;
+  }
+
+  async function handleConfirmUninstall() {
+    if (isUninstalling) return;
+    isUninstalling = true;
     try {
       await LauncherService.ClearDownloadCache(currentPath);
+      showUninstallConfirm = false;
       handleClose();
     } catch (e) {
       console.error('Failed to uninstall game:', e);
+    } finally {
+      isUninstalling = false;
     }
   }
 
   function onMouseDown(e: MouseEvent) {
+    if (showUninstallConfirm) return;
     if ((e.target as HTMLElement).closest('button, input, select, textarea, a, .action-link, .close-btn, .tab-btn')) {
       return;
     }
@@ -189,7 +223,7 @@
   }
 </script>
 
-{#if open || visible}
+{#if open}
   <div class="settings-backdrop" class:closing role="presentation">
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
@@ -387,6 +421,51 @@
         {/if}
       </main>
       </div>
+
+      {#if showUninstallConfirm}
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <div
+          class="notification-overlay"
+          role="presentation"
+          onclick={handleCancelUninstall}
+          onmousedown={(e) => e.stopPropagation()}
+        >
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <div
+            class="notification-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notification-heading"
+            tabindex="-1"
+            onclick={(e) => e.stopPropagation()}
+          >
+            <div id="notification-heading" class="notification-title">SYSTEM NOTIFICATION</div>
+            <div class="notification-body">
+              We're sorry to see you go! Are you sure you want to uninstall the game?
+            </div>
+            <div class="notification-actions">
+              <button
+                type="button"
+                class="notification-btn-cancel"
+                onclick={handleCancelUninstall}
+                disabled={isUninstalling}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="notification-btn-confirm"
+                onclick={handleConfirmUninstall}
+                disabled={isUninstalling}
+              >
+                {isUninstalling ? 'Uninstalling...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}
