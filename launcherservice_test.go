@@ -165,8 +165,8 @@ func TestCancelOperationAndWaitWaitsForOperationCompletion(t *testing.T) {
 }
 
 func TestPowerShellSingleQuoted(t *testing.T) {
-	path := "C:\\Users\\O'Brien\\$Desktop`Redirected"
-	if got, want := powerShellSingleQuoted(path), "'C:\\Users\\O''Brien\\$Desktop`Redirected'"; got != want {
+	path := "C:\\Users\\O'Brien\\$Desktop`Redirected\\‘’‚‛"
+	if got, want := powerShellSingleQuoted(path), "'C:\\Users\\O''Brien\\$Desktop`Redirected\\‘‘’’‚‚‛‛'"; got != want {
 		t.Fatalf("PowerShell path quoting = %q, want %q", got, want)
 	}
 }

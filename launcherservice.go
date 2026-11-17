@@ -885,9 +885,13 @@ $Shortcut.Save()
 }
 
 // powerShellSingleQuoted returns a PowerShell string literal without allowing
-// variable or backtick expansion in a filesystem path.
+// variable or backtick expansion in a filesystem path. PowerShell recognizes
+// typographic single quotation marks as string delimiters too.
 func powerShellSingleQuoted(value string) string {
-	return "'" + strings.ReplaceAll(value, "'", "''") + "'"
+	for _, quote := range []string{"'", "‘", "’", "‚", "‛"} {
+		value = strings.ReplaceAll(value, quote, quote+quote)
+	}
+	return "'" + value + "'"
 }
 
 // desktopShortcutPath uses the Windows known Desktop folder so shortcut
