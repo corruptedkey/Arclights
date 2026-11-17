@@ -37,8 +37,18 @@ type LauncherService struct {
 	mu                sync.Mutex
 	activeCtx         context.Context
 	cancelFunc        context.CancelFunc
+	activeOperation   *launcherOperation
 	isClearingCache   atomic.Bool
 	isWatchingProcess bool
+}
+
+// launcherOperation tracks work which may modify the game directory. Keeping a
+// completion signal lets destructive operations wait until cancelled workers
+// have stopped using the directory.
+type launcherOperation struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+	done   chan struct{}
 }
 
 // LauncherSettings stores user-configured paths and preferences.
@@ -620,6 +630,10 @@ func (s *LauncherService) StartInstall(installPath string, createShortcut bool) 
 	if installPath == "" {
 		return errors.New("install path cannot be empty")
 	}
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
 
 	currentSettings := s.loadSettings()
 	currentSettings.InstallPath = installPath
@@ -627,12 +641,13 @@ func (s *LauncherService) StartInstall(installPath string, createShortcut bool) 
 	s.saveSettings(currentSettings)
 
 	go func() {
+		defer s.finishOperation(op)
 		app := application.Get()
 		if app != nil {
 			app.Event.Emit("installer:status:change", "downloading")
 		}
 
-		err := s.StreamInstallGame(installPath)
+		err := s.streamInstallGame(op.ctx, installPath)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				if s.isClearingCache.Load() {
@@ -671,14 +686,19 @@ func (s *LauncherService) StartUpdate(installPath string) error {
 	if err != nil {
 		return err
 	}
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
 
 	go func() {
+		defer s.finishOperation(op)
 		app := application.Get()
 		if app != nil {
 			app.Event.Emit("installer:status:change", "downloading")
 		}
 
-		err := s.StreamUpdateGame(installPath, cfg.Version)
+		err := s.streamUpdateGame(op.ctx, installPath, cfg.Version)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				if s.isClearingCache.Load() {
@@ -845,19 +865,48 @@ func (s *LauncherService) CreateDesktopShortcut(installPath string) error {
 	}
 	launcherExe = filepath.Clean(launcherExe)
 
+	shortcutPath, err := desktopShortcutPath()
+	if err != nil {
+		return err
+	}
+
 	psScript := fmt.Sprintf(`
 $WshShell = New-Object -comObject WScript.Shell
-$desktop = [System.Environment]::GetFolderPath('Desktop')
-$Shortcut = $WshShell.CreateShortcut("$desktop\Arknights Endfield.lnk")
-$Shortcut.TargetPath = %q
+$Shortcut = $WshShell.CreateShortcut(%s)
+$Shortcut.TargetPath = %s
 $Shortcut.Arguments = "--start"
-$Shortcut.WorkingDirectory = %q
-$Shortcut.IconLocation = %q
+$Shortcut.WorkingDirectory = %s
+$Shortcut.IconLocation = %s
 $Shortcut.Save()
-`, launcherExe, filepath.Dir(launcherExe), gameExePath+",0")
+`, powerShellSingleQuoted(shortcutPath), powerShellSingleQuoted(launcherExe), powerShellSingleQuoted(filepath.Dir(launcherExe)), powerShellSingleQuoted(gameExePath+",0"))
 
 	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", psScript)
 	return cmd.Run()
+}
+
+// powerShellSingleQuoted returns a PowerShell string literal without allowing
+// variable or backtick expansion in a filesystem path. PowerShell recognizes
+// typographic single quotation marks as string delimiters too.
+func powerShellSingleQuoted(value string) string {
+	for _, quote := range []string{"'", "‘", "’", "‚", "‛"} {
+		value = strings.ReplaceAll(value, quote, quote+quote)
+	}
+	return "'" + value + "'"
+}
+
+// desktopShortcutPath uses the Windows known Desktop folder so shortcut
+// creation and deletion work when the desktop has been redirected.
+func desktopShortcutPath() (string, error) {
+	cmd := exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", "[System.Environment]::GetFolderPath('Desktop')")
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("resolve desktop directory: %w", err)
+	}
+	desktopDir := strings.TrimSpace(string(output))
+	if desktopDir == "" {
+		return "", errors.New("desktop directory is empty")
+	}
+	return filepath.Join(desktopDir, "Arknights Endfield.lnk"), nil
 }
 
 // OpenGameDirectory opens the install directory in Windows File Explorer.
@@ -877,7 +926,12 @@ func (s *LauncherService) ClearDownloadCache(installPath string) error {
 	s.isClearingCache.Store(true)
 	defer s.isClearingCache.Store(false)
 
-	s.CancelOperation()
+	s.cancelOperationAndWait()
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
+	defer s.finishOperation(op)
 
 	if installPath == "" {
 		settings := s.loadSettings()
@@ -945,16 +999,100 @@ func (s *LauncherService) ClearDownloadCache(installPath string) error {
 	return nil
 }
 
+// UninstallGame cancels active operations and completely deletes all game files from the install directory.
+func (s *LauncherService) UninstallGame(installPath string) error {
+	s.isClearingCache.Store(true)
+	defer s.isClearingCache.Store(false)
+
+	s.cancelOperationAndWait()
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
+	defer s.finishOperation(op)
+
+	if installPath == "" {
+		settings := s.loadSettings()
+		installPath = settings.InstallPath
+	}
+	if installPath == "" {
+		return nil
+	}
+
+	cleanPath := filepath.Clean(installPath)
+	vol := filepath.VolumeName(cleanPath)
+	if cleanPath == vol || cleanPath == vol+"\\" || cleanPath == vol+"/" || cleanPath == "/" {
+		return errors.New("cannot uninstall from root directory")
+	}
+
+	cfg, err := s.DetectInstalledConfig(cleanPath)
+	if err != nil {
+		return fmt.Errorf("cannot uninstall: installed game configuration is unavailable: %w", err)
+	}
+	if !s.isGameInstalled(cleanPath, cfg) {
+		return errors.New("cannot uninstall: game executable was not found")
+	}
+
+	entries, err := os.ReadDir(cleanPath)
+	if err != nil {
+		return fmt.Errorf("read game directory: %w", err)
+	}
+	for _, entry := range entries {
+		if err := os.RemoveAll(filepath.Join(cleanPath, entry.Name())); err != nil {
+			return fmt.Errorf("remove game entry %q: %w", entry.Name(), err)
+		}
+	}
+
+	shortcutPath, err := desktopShortcutPath()
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(shortcutPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("remove desktop shortcut: %w", err)
+	}
+
+	app := application.Get()
+	if app != nil {
+		app.Event.Emit("installer:status:change", "not_installed")
+		app.Event.Emit("installer:stream:progress", installer.StreamProgress{
+			DownloadedBytes:    0,
+			TotalDownloadBytes: 0,
+			CompletedFiles:     0,
+			CurrentFile:        "",
+			SpeedBps:           0,
+			Percent:            0,
+			IsPaused:           false,
+		})
+	}
+
+	return nil
+}
+
 // StartVerification runs game verification and repairs any corrupted files in the background.
 func (s *LauncherService) StartVerification(installPath string) error {
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
+
 	go func() {
+		defer s.finishOperation(op)
 		app := application.Get()
 		if app != nil {
 			app.Event.Emit("installer:status:change", "verifying")
 		}
 
-		diffs, err := s.VerifyGame(installPath)
+		diffs, err := s.verifyGame(op.ctx, installPath)
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				if s.isClearingCache.Load() {
+					return
+				}
+				if app != nil {
+					app.Event.Emit("installer:status:change", "paused")
+				}
+				return
+			}
 			if app != nil {
 				app.Event.Emit("installer:error", err.Error())
 				app.Event.Emit("installer:status:change", "ready")
@@ -963,7 +1101,7 @@ func (s *LauncherService) StartVerification(installPath string) error {
 		}
 
 		if len(diffs) > 0 {
-			_ = s.RepairGame(installPath, diffs)
+			_ = s.repairGame(op.ctx, installPath, diffs)
 		}
 
 		if app != nil {
@@ -1018,26 +1156,64 @@ func (s *LauncherService) DetectInstalledConfig(installDir string) (*networks.Lo
 	return cfg, nil
 }
 
-// CancelOperation pauses or stops any active verify, repair, or stream install operation.
-func (s *LauncherService) CancelOperation() {
+// beginOperation reserves the game directory for one modifying operation.
+func (s *LauncherService) beginOperation() (*launcherOperation, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.cancelFunc != nil {
-		s.cancelFunc()
-		s.cancelFunc = nil
-		s.activeCtx = nil
+	if s.activeOperation != nil {
+		return nil, errors.New("another game operation is already active")
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	op := &launcherOperation{ctx: ctx, cancel: cancel, done: make(chan struct{})}
+	s.activeOperation = op
+	s.activeCtx = ctx
+	s.cancelFunc = cancel
+	return op, nil
+}
+
+func (s *LauncherService) finishOperation(op *launcherOperation) {
+	s.mu.Lock()
+	if s.activeOperation == op {
+		s.activeOperation = nil
+		s.activeCtx = nil
+		s.cancelFunc = nil
+		close(op.done)
+	}
+	s.mu.Unlock()
+}
+
+// CancelOperation signals an active verify, repair, or stream operation to stop.
+func (s *LauncherService) CancelOperation() {
+	s.mu.Lock()
+	op := s.activeOperation
+	s.mu.Unlock()
+	if op != nil {
+		op.cancel()
+	}
+}
+
+func (s *LauncherService) cancelOperationAndWait() {
+	s.mu.Lock()
+	op := s.activeOperation
+	s.mu.Unlock()
+	if op == nil {
+		return
+	}
+	op.cancel()
+	<-op.done
 }
 
 // VerifyGame scans installDir against the live game_files CDN manifest and returns missing/corrupt files.
 func (s *LauncherService) VerifyGame(installDir string) ([]installer.GameFileEntry, error) {
-	s.mu.Lock()
-	ctx, cancel := context.WithCancel(context.Background())
-	s.activeCtx = ctx
-	s.cancelFunc = cancel
-	s.mu.Unlock()
-	defer s.CancelOperation()
+	op, err := s.beginOperation()
+	if err != nil {
+		return nil, err
+	}
+	defer s.finishOperation(op)
+	return s.verifyGame(op.ctx, installDir)
+}
 
+func (s *LauncherService) verifyGame(ctx context.Context, installDir string) ([]installer.GameFileEntry, error) {
 	rsp, err := s.client.GetLatestGame(ctx, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch game endpoints: %w", err)
@@ -1070,14 +1246,15 @@ func (s *LauncherService) RepairGame(installDir string, diffs []installer.GameFi
 	if len(diffs) == 0 {
 		return nil
 	}
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
+	defer s.finishOperation(op)
+	return s.repairGame(op.ctx, installDir, diffs)
+}
 
-	s.mu.Lock()
-	ctx, cancel := context.WithCancel(context.Background())
-	s.activeCtx = ctx
-	s.cancelFunc = cancel
-	s.mu.Unlock()
-	defer s.CancelOperation()
-
+func (s *LauncherService) repairGame(ctx context.Context, installDir string, diffs []installer.GameFileEntry) error {
 	rsp, err := s.client.GetLatestGame(ctx, "")
 	if err != nil {
 		return fmt.Errorf("failed to fetch game endpoints: %w", err)
@@ -1097,13 +1274,15 @@ func (s *LauncherService) RepairGame(installDir string, diffs []installer.GameFi
 
 // StreamInstallGame downloads all game files concurrently directly from the CDN manifest.
 func (s *LauncherService) StreamInstallGame(destDir string) error {
-	s.mu.Lock()
-	ctx, cancel := context.WithCancel(context.Background())
-	s.activeCtx = ctx
-	s.cancelFunc = cancel
-	s.mu.Unlock()
-	defer s.CancelOperation()
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
+	defer s.finishOperation(op)
+	return s.streamInstallGame(op.ctx, destDir)
+}
 
+func (s *LauncherService) streamInstallGame(ctx context.Context, destDir string) error {
 	rsp, err := s.client.GetLatestGame(ctx, "")
 	if err != nil {
 		return fmt.Errorf("failed to fetch latest game info: %w", err)
@@ -1146,13 +1325,15 @@ func (s *LauncherService) StreamInstallGame(destDir string) error {
 
 // StreamUpdateGame updates an existing game directory using a delta patch archive without saving the zip archive to disk.
 func (s *LauncherService) StreamUpdateGame(installDir string, currentVersion string) error {
-	s.mu.Lock()
-	ctx, cancel := context.WithCancel(context.Background())
-	s.activeCtx = ctx
-	s.cancelFunc = cancel
-	s.mu.Unlock()
-	defer s.CancelOperation()
+	op, err := s.beginOperation()
+	if err != nil {
+		return err
+	}
+	defer s.finishOperation(op)
+	return s.streamUpdateGame(op.ctx, installDir, currentVersion)
+}
 
+func (s *LauncherService) streamUpdateGame(ctx context.Context, installDir string, currentVersion string) error {
 	rsp, err := s.client.GetLatestGame(ctx, currentVersion)
 	if err != nil {
 		return fmt.Errorf("failed to check update: %w", err)
@@ -1162,7 +1343,7 @@ func (s *LauncherService) StreamUpdateGame(installDir string, currentVersion str
 		return nil
 	}
 	if up.Type == networks.UpdateTypeFull {
-		return s.StreamInstallGame(installDir)
+		return s.streamInstallGame(ctx, installDir)
 	}
 	if up.Patch == nil || up.Patch.URL == "" {
 		return errors.New("no patch package URL available")

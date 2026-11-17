@@ -10,6 +10,15 @@
   gap: 4px;
   padding: 8px;
   border-radius: 20px;
+}
+
+.socials::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
   background: rgba(24, 20, 20, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.14);
   -webkit-backdrop-filter: blur(14px);
@@ -63,13 +72,8 @@
   right: 100%;
   top: -12px;
   padding-right: 16px;
-  opacity: 0;
   visibility: hidden;
-  transform: translateX(6px);
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease,
-    visibility 0.15s;
+  transition: visibility 0.15s;
 }
 
 .socials .popup.has-qr {
@@ -86,13 +90,16 @@
 .socials .panel {
   padding: 8px;
   border-radius: 12px;
-  background: rgba(24, 20, 20, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  background: rgba(14, 14, 17, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+  backdrop-filter: blur(24px) saturate(120%);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   color: #f1f1f3;
   font-size: 14px;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .socials .w-list {
@@ -194,4 +201,15 @@
   width: 44px;
   height: 44px;
   object-fit: contain;
+}
+
+.socials .item:hover .popup,
+.socials .item:focus-within .popup {
+  visibility: visible;
+}
+
+.socials .item:hover .panel,
+.socials .item:focus-within .panel {
+  opacity: 1;
+  transform: none;
 }

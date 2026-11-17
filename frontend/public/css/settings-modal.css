@@ -2,13 +2,17 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   animation: settingsFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.settings-backdrop.closing {
+  animation: settingsFadeOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 @keyframes settingsFadeIn {
@@ -16,19 +20,28 @@
   to { opacity: 1; }
 }
 
+@keyframes settingsFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 .settings-card {
   position: relative;
-  width: 760px;
+  width: 740px;
+  height: 430px;
   max-width: 95vw;
   background: #18171A;
-  border-radius: 18px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
   display: flex;
-  min-height: 430px;
   overflow: hidden;
   animation: settingsScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+}
+
+.settings-card.closing {
+  animation: settingsScaleOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 @keyframes settingsScaleIn {
@@ -42,32 +55,21 @@
   }
 }
 
-.settings-card .close-btn {
-  position: absolute;
-  top: 20px;
-  right: 22px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  z-index: 10;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-
-.settings-card .close-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
+@keyframes settingsScaleOut {
+  from {
+    opacity: 1;
+    transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 12px)) scale(0.93);
+  }
 }
 
 .settings-card .sidebar-col {
-  width: 180px;
+  width: 190px;
   flex-shrink: 0;
-  padding: 24px 14px 24px 22px;
+  padding: 22px 14px;
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
@@ -77,18 +79,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 0 8px;
   color: #ffffff;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .settings-card .gear-icon {
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
 }
 
 .settings-card .settings-title {
   font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.01em;
 }
 
 .settings-card .tab-list {
@@ -98,41 +102,99 @@
 }
 
 .settings-card .tab-btn {
+  width: 100%;
+  height: 40px;
   background: transparent;
   border: none;
-  border-radius: 10px;
-  padding: 10px 14px;
+  border-radius: 8px;
+  padding: 0 14px;
   text-align: left;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
+  display: flex;
+  align-items: center;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .settings-card .tab-btn:hover:not(.active) {
   background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .settings-card .tab-btn.active {
-  background: #2e2d32;
+  background: #353438;
   color: #ffffff;
+}
+
+.settings-card .right-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.settings-card .top-bar {
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
+}
+
+.settings-card .close-btn {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.settings-card .close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .settings-card .content-panel {
   flex: 1;
-  min-width: 0;
-  padding: 48px 28px 26px;
+  min-height: 0;
+  padding: 0 22px 24px 24px;
+  margin-right: 4px;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  gap: 14px;
+}
+
+.settings-card .content-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.settings-card .content-panel::-webkit-scrollbar-track {
+  background: transparent;
+  margin-bottom: 16px;
+}
+
+.settings-card .content-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
 }
 
 .settings-card .game-meta-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 2px;
+  flex-shrink: 0;
 }
 
 .settings-card .game-avatar-wrap {
@@ -142,8 +204,8 @@
 }
 
 .settings-card .game-avatar {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 10px;
   object-fit: cover;
 }
@@ -151,17 +213,17 @@
 .settings-card .game-titles {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .settings-card .game-name {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
 }
 
 .settings-card .game-ver {
-  font-size: 11.5px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.45);
 }
 
@@ -174,14 +236,14 @@
   color: rgba(255, 255, 255, 0.45);
   font-size: 12px;
   cursor: pointer;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border-radius: 6px;
   transition: color 0.15s ease, background 0.15s ease;
 }
 
 .settings-card .uninstall-btn:hover:not(.disabled) {
-  color: #ff5555;
-  background: rgba(255, 85, 85, 0.08);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .settings-card .uninstall-btn.disabled {
@@ -190,10 +252,10 @@
 }
 
 .settings-card .settings-box {
-  background: #242327;
-  border-radius: 12px;
-  padding: 16px 18px;
-  margin-bottom: 12px;
+  background: #212024;
+  border-radius: 10px;
+  padding: 16px 20px;
+  flex-shrink: 0;
 }
 
 .settings-card .box-title {
@@ -202,22 +264,27 @@
   color: #ffffff;
 }
 
+.settings-card .card-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 14px -20px;
+}
+
 .settings-card .path-text {
-  margin-top: 10px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .settings-card .box-hint {
-  margin-top: 4px;
-  font-size: 11.5px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
 }
 
-.settings-card .box-hint-mb {
+.settings-card .box-hint-sub {
   margin-top: 4px;
-  margin-bottom: 14px;
-  font-size: 11.5px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
 }
 
@@ -227,44 +294,52 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-.settings-card .action-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  margin: 14px 0 10px;
+.settings-card .action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .settings-card .action-link {
-  width: 100%;
+  width: calc(100% + 20px);
+  margin: 0 -10px;
+  height: 36px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: transparent;
   border: none;
-  padding: 8px 0;
+  border-radius: 6px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.settings-card .action-link.muted {
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .settings-card .action-link:hover {
-  color: #fdfc00;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .settings-card .chevron {
-  color: rgba(255, 255, 255, 0.4);
-  transition: transform 0.15s ease, color 0.15s ease;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.15s ease;
 }
 
 .settings-card .action-link:hover .chevron {
-  color: #fdfc00;
-  transform: translateX(2px);
+  color: #ffffff;
 }
 
 .settings-card .radio-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+  padding: 2px 0;
 }
 
 .settings-card .radio-option {
@@ -273,8 +348,8 @@
   gap: 10px;
   background: transparent;
   border: none;
-  padding: 4px 0;
-  color: rgba(255, 255, 255, 0.85);
+  padding: 0;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 13px;
   cursor: pointer;
   text-align: left;
@@ -282,14 +357,14 @@
 }
 
 .settings-card .radio-option:hover {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .settings-card .radio-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .settings-card .radio-option.selected .radio-indicator {
@@ -298,13 +373,11 @@
 
 .settings-card .radio-option.selected .radio-label {
   color: #ffffff;
-  font-weight: 500;
 }
 
 .settings-card .cmd-input-wrap {
-  margin-top: 12px;
-  height: 40px;
-  background: #1c1b1f;
+  height: 38px;
+  background: #171619;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 0 12px;
@@ -338,7 +411,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 12px;
 }
 
 .settings-card .option-label {
@@ -349,7 +421,7 @@
 .settings-card .toggle-switch {
   width: 58px;
   height: 26px;
-  background: #1c1b1f;
+  background: #171619;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 100px;
   display: flex;
@@ -367,7 +439,7 @@
 }
 
 .settings-card .toggle-switch.active {
-  background: #1c1b1f;
+  background: #171619;
   border: 1.5px solid #fdfc00;
 }
 
@@ -405,4 +477,141 @@
 
 .settings-card .toggle-text.on {
   color: #ffffff;
+}
+
+/* System Notification Modal (Overlapping) */
+.settings-card .notification-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 12, 16, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: inherit;
+  animation: notifyOverlayFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes notifyOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-card .notification-card {
+  width: 470px;
+  max-width: calc(100% - 48px);
+  background: #1c1d22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.12);
+  padding: 28px 36px 28px;
+  display: flex;
+  flex-direction: column;
+  animation: notifyCardScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+@keyframes notifyCardScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.settings-card .notification-title {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin: 0 0 26px 0;
+}
+
+.settings-card .notification-body {
+  font-size: 13.5px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.55;
+  text-align: left;
+  margin: 0 0 32px 0;
+}
+
+.settings-card .notification-actions {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.settings-card .notification-btn-cancel,
+.settings-card .notification-btn-confirm {
+  flex: 1;
+  height: 44px;
+  border-radius: 9999px;
+  border: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+}
+
+.settings-card .notification-btn-cancel:focus-visible,
+.settings-card .notification-btn-confirm:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.settings-card .notification-btn-cancel {
+  background: #2b2c31;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.settings-card .notification-btn-cancel:hover:not(:disabled) {
+  background: #383940;
+}
+
+.settings-card .notification-btn-confirm {
+  background: #ffffff;
+  color: #121214;
+  font-weight: 700;
+}
+
+.settings-card .notification-btn-confirm:hover:not(:disabled) {
+  background: #e8e8ea;
+}
+
+.settings-card .notification-btn-cancel:active:not(:disabled),
+.settings-card .notification-btn-confirm:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.settings-card .notification-btn-cancel:disabled,
+.settings-card .notification-btn-confirm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.settings-backdrop,
+	.settings-backdrop.closing,
+	.settings-card,
+	.settings-card.closing,
+  .settings-card .notification-overlay,
+  .settings-card .notification-card {
+    animation: none;
+  }
 }

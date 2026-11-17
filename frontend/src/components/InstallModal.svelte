@@ -23,22 +23,49 @@
   let spaceInfo = $state<DiskSpaceInfo | null>(null);
   let isLoadingSpace = $state(false);
 
+  let closing = $state(false);
+
   let posX = $state(0);
   let posY = $state(0);
   let isDragging = false;
   let startX = 0;
   let startY = 0;
 
+  const CLOSE_DURATION = 250;
+
   $effect(() => {
     if (open) {
+      closing = false;
       currentPath = (installPath || 'E:/Arknights Endfield').replace(/\\/g, '/');
       currentShortcut = createShortcut ?? true;
       if (diskSpace) {
         spaceInfo = diskSpace;
       }
       refreshSpace(currentPath);
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleCancel();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      posX = 0;
+      posY = 0;
     }
   });
+
+  function handleCancel() {
+    if (closing) return;
+    closing = true;
+    setTimeout(() => {
+      closing = false;
+      onCancel();
+    }, CLOSE_DURATION);
+  }
 
   async function refreshSpace(path: string) {
     if (!path) return;
@@ -75,7 +102,14 @@
   }
 
   function handleConfirm() {
-    onConfirm(currentPath, currentShortcut);
+    if (closing) return;
+    const confirmedPath = currentPath;
+    const confirmedShortcut = currentShortcut;
+    closing = true;
+    setTimeout(() => {
+      closing = false;
+      onConfirm(confirmedPath, confirmedShortcut);
+    }, CLOSE_DURATION);
   }
 
   function onMouseDown(e: MouseEvent) {
@@ -103,10 +137,11 @@
 </script>
 
 {#if open}
-  <div class="modal-backdrop install-modal-backdrop" role="presentation">
+  <div class="modal-backdrop install-modal-backdrop" class:closing role="presentation">
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       class="modal-card install-modal-card"
+      class:closing
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -124,6 +159,7 @@
           bind:value={currentPath}
           onblur={handlePathBlur}
           spellcheck="false"
+          disabled={closing}
         />
         <div class="divider"></div>
         <button
@@ -132,6 +168,7 @@
           title="Browse Directory"
           aria-label="Browse Directory"
           onclick={chooseDirectory}
+          disabled={closing}
         >
           <svg class="folder-svg" width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M8 10H12" stroke="currentColor" stroke-width="2"/>
@@ -155,6 +192,7 @@
           type="checkbox"
           class="native-checkbox-sr"
           bind:checked={currentShortcut}
+          disabled={closing}
         />
         <span class="checkbox-asset" aria-hidden="true">
           {#if currentShortcut}
@@ -172,10 +210,10 @@
       </label>
 
       <div class="modal-actions">
-        <button type="button" class="btn-cancel" onclick={onCancel}>
+        <button type="button" class="btn-cancel" onclick={handleCancel} disabled={closing}>
           Cancel
         </button>
-        <button type="button" class="btn-confirm" onclick={handleConfirm}>
+        <button type="button" class="btn-confirm" onclick={handleConfirm} disabled={closing}>
           Confirm
         </button>
       </div>

@@ -40,6 +40,8 @@
   let updateToast = $state<string | null>(null);
   let toastTimer: any = null;
 
+  let closing = $state(false);
+
   let modalX = $state(0);
   let modalY = $state(0);
   let isDragging = false;
@@ -65,15 +67,37 @@
     }, duration);
   }
 
+  const CLOSE_DURATION = 250;
+
   $effect(() => {
     modalState.launcherSettingsOpen = open;
     if (open) {
+      closing = false;
       loadBackendSettings();
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          handleClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       modalX = 0;
       modalY = 0;
     }
   });
+
+  function handleClose() {
+    if (closing) return;
+    closing = true;
+    setTimeout(() => {
+      closing = false;
+      onClose();
+    }, CLOSE_DURATION);
+  }
 
   async function loadBackendSettings() {
     try {
@@ -227,8 +251,10 @@
     };
   });
 
-  function handleHeaderMouseDown(e: MouseEvent) {
-    if ((e.target as HTMLElement).closest('button')) return;
+  function handleWindowMouseDown(e: MouseEvent) {
+    if ((e.target as HTMLElement).closest('button, input, select, textarea, a, .checkbox-row, .radio-row, .select-box')) {
+      return;
+    }
     isDragging = true;
     startX = e.clientX;
     startY = e.clientY;
@@ -253,39 +279,33 @@
 </script>
 
 {#if open}
-  <div class="modal-backdrop launcher-modal-backdrop" data-no-drag>
+  <div class="modal-backdrop launcher-modal-backdrop" class:closing data-no-drag>
     {#if updateToast}
       <div class="toast-popup" role="status">
         {updateToast}
       </div>
     {/if}
 
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       class="modal-window launcher-modal-window"
+      class:closing
       style="--drag-x: {modalX}px; --drag-y: {modalY}px; transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));"
       role="dialog"
       aria-modal="true"
       aria-labelledby="launcher-settings-title"
+      tabindex="-1"
+      onmousedown={handleWindowMouseDown}
     >
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <div class="modal-header" onmousedown={handleHeaderMouseDown}>
-        <div class="modal-title" id="launcher-settings-title">
+      <aside class="tabs-sidebar">
+        <div class="sidebar-header" id="launcher-settings-title">
           <svg class="title-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M4.36128 3.22889L3.61641 2.48401L2.2022 3.89823L2.99448 4.69051C2.50552 5.42858 2.17543 6.28107 2.05297 7.19922L0.5 7.19922V9.19922H2.11986C2.30316 10.1028 2.68953 10.9327 3.22926 11.6392L2.48445 12.384L3.89866 13.7982L4.69104 13.0059C5.42898 13.4946 6.28128 13.8246 7.19922 13.947V15.5H9.19921L9.19922 13.8801C9.96581 13.7246 10.6794 13.423 11.3095 13.0055L12.1017 13.7977L13.5159 12.3835L12.7711 11.6387C13.3106 10.9323 13.6969 10.1026 13.8801 9.19922H15.5V7.19922H13.947C13.8246 6.28129 13.4946 5.42899 13.0059 4.69104L13.7982 3.89875L12.3839 2.48453L11.6392 3.22927C10.9327 2.68953 10.1028 2.30316 9.19922 2.11986L9.19922 0.5H7.19922V2.05297C6.14117 2.19408 5.17032 2.61093 4.36128 3.22889ZM8 12.4C10.4301 12.4 12.4 10.4301 12.4 8C12.4 5.56995 10.4301 3.6 8 3.6C5.56995 3.6 3.6 5.56995 3.6 8C3.6 10.4301 5.56995 12.4 8 12.4ZM8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" fill="white"/>
           </svg>
           <span>Settings</span>
         </div>
 
-        <button type="button" class="close-btn" aria-label="Close" onclick={onClose}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <rect x="12" y="11.2928" width="1" height="1" transform="rotate(45 12 11.2928)" stroke="white"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M13.5562 9.31353L17.0917 5.778L18.5059 7.19221L14.9704 10.7277L13.5562 9.31353ZM5.77746 17.0912L9.31299 13.5556L10.7272 14.9698L7.19167 18.5054L5.77746 17.0912ZM14.687 13.5556L18.2225 17.0912L16.8083 18.5054L13.2728 14.9698L14.687 13.5556ZM6.90883 5.77745L10.4444 9.31298L9.03015 10.7272L5.49462 7.19166L6.90883 5.77745Z" fill="white"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <div class="tabs-sidebar">
+        <nav class="tab-list">
           <button
             type="button"
             class="tab-btn"
@@ -302,15 +322,27 @@
           >
             About
           </button>
+        </nav>
+      </aside>
+
+      <div class="right-col">
+        <div class="top-bar">
+          <button type="button" class="close-btn" aria-label="Close" onclick={handleClose}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="12" y="11.2928" width="1" height="1" transform="rotate(45 12 11.2928)" stroke="currentColor"/>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M13.5562 9.31353L17.0917 5.778L18.5059 7.19221L14.9704 10.7277L13.5562 9.31353ZM5.77746 17.0912L9.31299 13.5556L10.7272 14.9698L7.19167 18.5054L5.77746 17.0912ZM14.687 13.5556L18.2225 17.0912L16.8083 18.5054L13.2728 14.9698L14.687 13.5556ZM6.90883 5.77745L10.4444 9.31298L9.03015 10.7272L5.49462 7.19166L6.90883 5.77745Z" fill="currentColor"/>
+            </svg>
+          </button>
         </div>
 
-        <div class="content-panel">
+        <main class="content-panel">
           {#if activeTab === 'launcher'}
             <div class="setting-card">
               <h3 class="card-heading">Language Settings</h3>
+              <div class="card-divider"></div>
               <div class="select-box">
                 <span>{selectedLanguage}</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="m6 9 6 6 6-6"/>
                 </svg>
               </div>
@@ -318,6 +350,7 @@
 
             <div class="setting-card">
               <h3 class="card-heading">Launch Settings</h3>
+              <div class="card-divider"></div>
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <!-- svelte-ignore a11y_no_static_element_interactions -->
               <div class="checkbox-row" onclick={handleAutoLaunchToggle}>
@@ -337,6 +370,7 @@
 
             <div class="setting-card">
               <h3 class="card-heading">Update Settings</h3>
+              <div class="card-divider"></div>
               <!-- svelte-ignore a11y_click_events_have_key_events -->
               <!-- svelte-ignore a11y_no_static_element_interactions -->
               <div class="checkbox-row" onclick={handleSilentUpdateToggle}>
@@ -356,6 +390,7 @@
 
             <div class="setting-card">
               <h3 class="card-heading">Update Channel</h3>
+              <div class="card-divider"></div>
               <div class="radio-group">
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -383,6 +418,7 @@
 
             <div class="setting-card">
               <h3 class="card-heading">When Closing Window</h3>
+              <div class="card-divider"></div>
               <div class="radio-group">
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -410,6 +446,7 @@
 
             <div class="setting-card">
               <h3 class="card-heading">Download Speed Limit</h3>
+              <div class="card-divider"></div>
               <div class="radio-group">
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -448,9 +485,10 @@
           {:else}
             <div class="setting-card">
               <div class="card-header-row">
-                <h3 class="card-heading no-margin">Launcher Version</h3>
+                <h3 class="card-heading">Launcher Version</h3>
                 <span class="version-text">Current Version: {currentVersion}</span>
               </div>
+              <div class="card-divider"></div>
 
               {#if updateReady}
                 <button type="button" class="action-row update-ready-row" onclick={handleRestartNow}>
@@ -481,37 +519,43 @@
 
             <div class="setting-card">
               <h3 class="card-heading">Client Log</h3>
-              <button type="button" class="action-row" onclick={handleOpenLogs}>
-                <span>View</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m9 18 6-6-6-6"/>
-                </svg>
-              </button>
-              <button type="button" class="action-row" onclick={() => showToast('Login required to submit logs')}>
-                <span>Submit Logs (Login Required)</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m9 18 6-6-6-6"/>
-                </svg>
-              </button>
+              <div class="card-divider"></div>
+              <div class="action-list">
+                <button type="button" class="action-row" onclick={handleOpenLogs}>
+                  <span>View</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
+                <button type="button" class="action-row" onclick={() => showToast('Login required to submit logs')}>
+                  <span>Submit Logs (Login Required)</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div class="setting-card">
               <h3 class="card-heading">Launcher Service Agreements</h3>
-              <button type="button" class="action-row" onclick={openTermsOfService}>
-                <span>Game Launcher Terms of Service</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m9 18 6-6-6-6"/>
-                </svg>
-              </button>
-              <button type="button" class="action-row" onclick={openPrivacyPolicy}>
-                <span>Game Launcher Privacy Policy</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m9 18 6-6-6-6"/>
-                </svg>
-              </button>
+              <div class="card-divider"></div>
+              <div class="action-list">
+                <button type="button" class="action-row" onclick={openTermsOfService}>
+                  <span>Game Launcher Terms of Service</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
+                <button type="button" class="action-row" onclick={openPrivacyPolicy}>
+                  <span>Game Launcher Privacy Policy</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           {/if}
-        </div>
+        </main>
       </div>
     </div>
   </div>

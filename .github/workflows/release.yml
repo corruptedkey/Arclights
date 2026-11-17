@@ -15,11 +15,94 @@ permissions:
   contents: write
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      sha: ${{ steps.meta.outputs.sha }}
+    steps:
+      - name: Checkout code (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version & generate notes
+        id: meta
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT" = "push" ]; then RAW="$REF_NAME"; else RAW="$INPUT_VERSION"; fi
+          VERSION="${RAW#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+.][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid version '$RAW'"
+            exit 1
+          fi
+          TAG="v$VERSION"
+          SHA=$(git rev-parse HEAD)
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            TAG_SHA=$(git rev-parse "refs/tags/$TAG^{commit}")
+            if [ "$TAG_SHA" != "$SHA" ]; then
+              echo "::error::Tag $TAG already exists at ${TAG_SHA::7}, but this run would build ${SHA::7}. Run the workflow from the tag itself (Use workflow from: Tag > $TAG) or pick a new version."
+              exit 1
+            fi
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+          PREV=$(git describe --tags --abbrev=0 --match 'v*' --exclude "$TAG" "$SHA" 2>/dev/null || true)
+
+          FMT="- [\`%h\`](https://github.com/$REPO/commit/%H) %s — %an"
+
+          if [ -n "$PREV" ]; then
+            COUNT=$(git rev-list --count "$PREV..$SHA")
+            HEADER="### Changes since $PREV ($COUNT commits)"
+            COMMITS=$(git log "$PREV..$SHA" --max-count=200 --pretty=format:"$FMT")
+            COMPARE="https://github.com/$REPO/compare/$PREV...$SHA"
+          else
+            COUNT=$(git rev-list --count "$SHA")
+            HEADER="### Initial release ($COUNT commits)"
+            COMMITS=$(git log "$SHA" --max-count=200 --pretty=format:"$FMT")
+            COMPARE=""
+          fi
+
+          {
+            echo "$HEADER"
+            echo
+            echo "$COMMITS"
+            if [ "$COUNT" -gt 200 ]; then
+              echo
+              echo "_Only the 200 most recent commits are listed._"
+            fi
+            if [ -n "$COMPARE" ]; then
+              echo
+              echo "**Full diff:** $COMPARE"
+            fi
+          } > notes.md
+
+          cat notes.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: notes.md
+          retention-days: 1
+
   build-and-release:
+    needs: prepare
     runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -32,13 +115,13 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install Wails v3 CLI
         shell: pwsh
         run: |
           go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
 
       - name: Build Application Binary
         shell: pwsh
@@ -49,12 +132,9 @@ jobs:
         shell: pwsh
         env:
           RELEASES_KEY: ${{ secrets.UPDATER_RELEASES_KEY }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          $ver = "${{ github.ref_name }}".TrimStart('v')
-          if (-not $ver -or $ver -eq "") {
-            $ver = "${{ github.event.inputs.version }}"
-          }
-          if (-not $ver) { $ver = "1.6.0" }
+          $ver = $env:VERSION
 
           # Write secret private key to temporary file for signing
           $keyFile = [System.IO.Path]::GetTempFileName()
@@ -70,9 +150,17 @@ jobs:
 
           Remove-Item -Force $keyFile
 
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ needs.prepare.outputs.version }}
+          target_commitish: ${{ needs.prepare.outputs.sha }}
+          body_path: notes.md
           files: |
             bin/arclights.exe
             bin/manifest.json

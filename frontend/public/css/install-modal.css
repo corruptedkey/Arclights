@@ -11,12 +11,25 @@
   animation: modalFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.install-modal-backdrop.closing {
+  animation: modalFadeOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
 @keyframes modalFadeIn {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes modalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -35,6 +48,19 @@
   user-select: none;
 }
 
+.install-modal-card.closing {
+  animation: modalScaleOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .install-modal-backdrop,
+  .install-modal-backdrop.closing,
+  .install-modal-card,
+  .install-modal-card.closing {
+    animation: none;
+  }
+}
+
 @keyframes modalScaleIn {
   from {
     opacity: 0;
@@ -43,6 +69,17 @@
   to {
     opacity: 1;
     transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+}
+
+@keyframes modalScaleOut {
+  from {
+    opacity: 1;
+    transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--drag-x, 0px), calc(var(--drag-y, 0px) + 12px)) scale(0.93);
   }
 }
 
