@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -48,16 +48,15 @@
 }
 
 .launcher-modal-window {
+  position: relative;
   width: 740px;
-  height: 420px;
-  background: rgba(22, 21, 24, 0.96);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  height: 430px;
+  max-width: 95vw;
+  background: #18171A;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
   display: flex;
-  flex-direction: column;
   overflow: hidden;
   animation: launcherWindowScale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -73,30 +72,80 @@
   }
 }
 
-.launcher-modal-window .modal-header {
-  height: 48px;
-  padding: 0 16px 0 20px;
+.launcher-modal-window .tabs-sidebar {
+  width: 190px;
+  padding: 22px 14px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: move;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
 }
 
-.launcher-modal-window .modal-title {
+.launcher-modal-window .sidebar-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  padding: 0 8px;
+  margin-bottom: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: #ffffff;
 }
 
 .launcher-modal-window .title-icon {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
+}
+
+.launcher-modal-window .tab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.launcher-modal-window .tab-btn {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.launcher-modal-window .tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.launcher-modal-window .tab-btn.active {
+  background: #353438;
+  color: #ffffff;
+}
+
+.launcher-modal-window .right-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.launcher-modal-window .top-bar {
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
 }
 
 .launcher-modal-window .close-btn {
@@ -109,104 +158,66 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.75);
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .launcher-modal-window .close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-}
-
-.launcher-modal-window .modal-body {
-  flex: 1;
-  display: flex;
-  min-height: 0;
-}
-
-.launcher-modal-window .tabs-sidebar {
-  width: 165px;
-  padding: 12px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
-}
-
-.launcher-modal-window .tab-btn {
-  width: 100%;
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 7px;
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  display: flex;
-  align-items: center;
-}
-
-.launcher-modal-window .tab-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.launcher-modal-window .tab-btn.active {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-weight: 600;
 }
 
 .launcher-modal-window .content-panel {
   flex: 1;
-  padding: 12px 16px 16px 16px;
+  min-height: 0;
+  padding: 0 22px 24px 24px;
+  margin-right: 4px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
 
 .launcher-modal-window .content-panel::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
+}
+
+.launcher-modal-window .content-panel::-webkit-scrollbar-track {
+  background: transparent;
+  margin-bottom: 16px;
 }
 
 .launcher-modal-window .content-panel::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
 }
 
 .launcher-modal-window .setting-card {
-  background: rgba(255, 255, 255, 0.038);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 10px 14px;
+  background: #212024;
+  border-radius: 10px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  flex-shrink: 0;
 }
 
 .launcher-modal-window .card-heading {
-  margin: 0 0 2px 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-}
-
-.launcher-modal-window .card-heading.no-margin {
   margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .launcher-modal-window .card-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2px;
+}
+
+.launcher-modal-window .card-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 14px -20px;
 }
 
 .launcher-modal-window .version-text {
@@ -215,17 +226,24 @@
 }
 
 .launcher-modal-window .select-box {
-  height: 34px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 36px;
+  margin: -4px -10px;
+  padding: 0 10px;
   border-radius: 6px;
-  padding: 0 12px;
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.launcher-modal-window .select-box:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  font-size: 12.5px;
-  cursor: default;
 }
 
 .launcher-modal-window .checkbox-row {
@@ -239,9 +257,9 @@
 .launcher-modal-window .custom-checkbox {
   width: 16px;
   height: 16px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,38 +270,36 @@
 
 .launcher-modal-window .custom-checkbox.checked {
   background: #ffffff;
-  border-color: #ffffff;
 }
 
 .launcher-modal-window .checkbox-texts {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
 .launcher-modal-window .checkbox-label {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: #ffffff;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .launcher-modal-window .checkbox-subtext {
-  font-size: 11.5px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.45);
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
 .launcher-modal-window .radio-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
   padding: 2px 0;
 }
 
 .launcher-modal-window .radio-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
 }
 
@@ -291,7 +307,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -304,60 +320,77 @@
 }
 
 .launcher-modal-window .radio-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #ffffff;
 }
 
 .launcher-modal-window .radio-label {
-  font-size: 12.5px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.15s ease;
+}
+
+.launcher-modal-window .radio-row:hover .radio-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.launcher-modal-window .custom-radio.checked ~ .radio-label {
   color: #ffffff;
 }
 
 .launcher-modal-window .speed-input-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
 .launcher-modal-window .speed-input {
-  width: 64px;
-  height: 26px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
-  padding: 0 6px;
-  color: #ffffff;
-  font-size: 12px;
+  width: 110px;
+  height: 32px;
+  background: #171619;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 0 10px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
   text-align: center;
   outline: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
 .launcher-modal-window .speed-input:focus {
-  border-color: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 
 .launcher-modal-window .speed-unit {
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.45);
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.launcher-modal-window .action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .launcher-modal-window .action-row {
-  width: 100%;
-  height: 34px;
+  width: calc(100% + 20px);
+  margin: 0 -10px;
+  height: 36px;
+  padding: 0 10px;
   background: transparent;
   border: none;
   border-radius: 6px;
-  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
-  margin-bottom: 2px;
 }
 
 .launcher-modal-window .action-row:hover:not(:disabled) {
@@ -371,8 +404,13 @@
 }
 
 .launcher-modal-window .action-row svg {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.launcher-modal-window .action-row:hover:not(:disabled) svg {
+  color: #ffffff;
 }
 
 .launcher-modal-window .update-ready-row {
@@ -380,15 +418,16 @@
   color: #ffd700;
 }
 
-.launcher-modal-window .update-ready-row:hover {
+.launcher-modal-window .update-ready-row:hover:not(:disabled) {
   background: rgba(255, 215, 0, 0.25);
+  color: #ffd700;
 }
 
 .launcher-modal-window .downloading-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 4px 0;
 }
 
 .launcher-modal-window .dl-info {
