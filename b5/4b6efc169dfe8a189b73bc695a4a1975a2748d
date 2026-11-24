@@ -1,0 +1,14 @@
+README.md
+  h_de426d733321e7 5-17,21-146,148,150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b54b6efc169dfe8a189b73bc695a4a1975a2748d",
+  "prompts": {},
+  "humans": {
+    "h_de426d733321e7": {
+      "author": "corruptedkey <rumaevvadim@gmail.com>"
+    }
+  }
+}
